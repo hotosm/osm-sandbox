@@ -9,11 +9,11 @@ bundle exec rails db:migrate
 # Ruby script to create admin (to file)
 # NOTE ID_EDITOR_REDIRECT_URI env var is injected
 cat << EOF > create_admin_user.rb
-unless User.exists?(email: "#{ENV['ADMIN_PASS']}")
+unless User.exists?(email: "#{ENV['ADMIN_EMAIL']}")
   pass_crypt, pass_salt = PasswordHash.create("#{ENV['ADMIN_PASS']}")
   admin_user = User.create!(
       display_name: "HOTOSM",
-      email: "#{ENV['ADMIN_PASS']}",
+      email: "#{ENV['ADMIN_EMAIL']}",
       pass_crypt: pass_crypt,
       pass_salt: pass_salt,
       email_valid: true,
@@ -28,7 +28,7 @@ unless User.exists?(email: "#{ENV['ADMIN_PASS']}")
 end
 
 unless Oauth2Application.exists?(name: 'ID Dev')
-  admin_user = User.find_by(email: "#{ENV['ADMIN_PASS']}")
+  admin_user = User.find_by(email: "#{ENV['ADMIN_EMAIL']}")
   id_app = Oauth2Application.create!(
       owner: admin_user,
       name: 'ID Dev',

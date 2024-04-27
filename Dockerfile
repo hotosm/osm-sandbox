@@ -1,9 +1,11 @@
-FROM ubuntu:22.04 as openstreetmap-repo
-RUN apt-get update \
- && apt-get install --no-install-recommends -y \
-      git \
-      ca-certificates \
- && rm -rf /var/lib/apt/lists/*
+FROM docker.io/ruby:3.3.0-slim-bookworm as openstreetmap-repo
+RUN set -ex \
+     && apt-get update \
+     && DEBIAN_FRONTEND=noninteractive apt-get install \
+     -y --no-install-recommends \
+          "git" \
+          "ca-certificates" \
+     && rm -rf /var/lib/apt/lists/*
 WORKDIR /repo
 RUN update-ca-certificates
 RUN git clone --depth 1 --no-checkout \
@@ -13,49 +15,36 @@ RUN git clone --depth 1 --no-checkout \
 
 
 
-# Modified from https://github.com/openstreetmap/openstreetmap-website
-FROM ubuntu:22.04 as build
+FROM docker.io/ruby:3.3.0-slim-bookworm as build
 ENV DEBIAN_FRONTEND=noninteractive
-# Install system packages then clean up to minimize image size
-RUN apt-get update \
- && apt-get install --no-install-recommends -y \
-      build-essential \
-      curl \
-      default-jre-headless \
-      file \
-      git-core \
-      gpg-agent \
-      libarchive-dev \
-      libffi-dev \
-      libgd-dev \
-      libpq-dev \
-      libsasl2-dev \
-      libvips-dev \
-      libxml2-dev \
-      libxslt1-dev \
-      libyaml-dev \
-      locales \
-      postgresql-client \
-      ruby \
-      ruby-dev \
-      ruby-bundler \
-      software-properties-common \
-      tzdata \
-      unzip \
-      nodejs \
-      npm \
- && npm install --global yarn \
- # We can't use snap packages for firefox inside a container, so we need to get firefox+geckodriver elsewhere
- && add-apt-repository -y ppa:mozillateam/ppa \
- && echo "Package: *\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001" > /etc/apt/preferences.d/mozilla-firefox \
- && apt-get install --no-install-recommends -y \
-      firefox-geckodriver \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
-ENV DEBIAN_FRONTEND=dialog
-# Setup app location
+RUN set -ex \
+     && apt-get update \
+     && DEBIAN_FRONTEND=noninteractive apt-get install \
+     -y --no-install-recommends \
+          "build-essential" \
+          "software-properties-common" \
+          "locales" \
+          "tzdata" \
+          "postgresql-client" \
+          "nodejs" \
+          "npm" \
+          "curl" \
+          "default-jre-headless" \
+          "file" \
+          "git-core" \
+          "gpg-agent" \
+          "libarchive-dev" \
+          "libffi-dev" \
+          "libgd-dev" \
+          "libpq-dev" \
+          "libsasl2-dev" \
+          "libvips-dev" \
+          "libxml2-dev" \
+          "libxslt1-dev" \
+          "libyaml-dev" \
+     && rm -rf /var/lib/apt/lists/* \
+     && npm install --global yarn
 WORKDIR /app
-# Copy the app, as normally expected to be mounted
 COPY --from=openstreetmap-repo \
     /repo/openstreetmap-website/ /app/
 # Install Ruby packages
@@ -66,28 +55,27 @@ RUN bundle config set --global path /usr/local/bundle \
 
 
 
-FROM ubuntu:22.04 as runtime
-ENV DEBIAN_FRONTEND=noninteractive \
-    PIDFILE=/tmp/pids/server.pid
-RUN apt-get update \
- && apt-get install --no-install-recommends -y \
-      libarchive-dev \
-      libffi-dev \
-      libgd-dev \
-      libpq-dev \
-      libsasl2-dev \
-      libvips-dev \
-      libxml2-dev \
-      libxslt1-dev \
-      libyaml-dev \
-      locales \
-      tzdata \
-      postgresql-client \
-      ruby \
-      ruby-bundler \
- && rm -rf /var/lib/apt/lists/*
+FROM docker.io/ruby:3.3.0-slim-bookworm as runtime
+ENV PIDFILE=/tmp/pids/server.pid
+RUN set -ex \
+     && apt-get update \
+     && DEBIAN_FRONTEND=noninteractive apt-get install \
+     -y --no-install-recommends \
+          "locales" \
+          "tzdata" \
+          "postgresql-client" \
+          "curl" \
+          "libarchive-dev" \
+          "libffi-dev" \
+          "libgd-dev" \
+          "libpq-dev" \
+          "libsasl2-dev" \
+          "libvips-dev" \
+          "libxml2-dev" \
+          "libxslt1-dev" \
+          "libyaml-dev" \
+     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-# COPY --from=build /app /app
 COPY --from=build /app/Gemfile* /app/Rakefile /app/config.ru /app/
 COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /usr/local/bundle /usr/local/bundle
@@ -109,6 +97,5 @@ RUN bundle config set --global path /usr/local/bundle \
      && sed -i 's/host: db/host: osm-db/' config/database.yml \
      && touch config/settings.local.yml \
      && chmod +x /osm-entrypoint.sh
-
-CMD ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
 ENTRYPOINT ["/osm-entrypoint.sh"]
+CMD ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
