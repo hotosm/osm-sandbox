@@ -1,0 +1,68 @@
+version: "3"
+
+networks:
+  osm-net: 
+    name: osm-net
+
+volumes:
+  osm-tmp:
+  osm-storage:
+  osm-db-data:
+
+services:
+  osm:
+    image: ghcr.io/hotosm/osm-sandbox:2024-04-27
+    build:
+      dockerfile: openstreetmap.dockerfile
+    environment:
+      PROTOCOL: http${DOMAIN:+s}
+      DOMAIN: ${DOMAIN:-127.0.0.1:4433}
+      ADMIN_EMAIL: ${ADMIN_PASS:-admin@hotosm.org}
+      ADMIN_PASS: ${ADMIN_PASS:-Password1234}
+      ID_EDITOR_REDIRECT_URI: http${DOMAIN:+s}://${DOMAIN:-127.0.0.1:4433}
+    volumes:
+      # Mount a tmp directory that will persist between runs
+      - osm-tmp:/app/tmp
+      # Mount a storage directory that will persist between runs
+      - osm-storage:/app/storage
+      # Mount local setting overrides
+      # - ./settings.local.yml:/app/config/settings.local.yml:ro
+    tmpfs:
+      /tmp/pids/
+    ports:
+      - "${PORT:-4433}:3000"
+    networks:
+      - osm-net
+    depends_on:
+      osm-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  osm-db:
+    image: docker.io/postgres:14
+    environment:
+      POSTGRES_DB: openstreetmap
+      POSTGRES_PASSWORD: openstreetmap
+      POSTGRES_USER: openstreetmap
+    volumes:
+      - osm-db-data:/var/lib/postgresql/data
+    networks:
+      - osm-net
+    restart: unless-stopped
+    healthcheck:
+      test: pg_isready -U openstreetmap -d openstreetmap
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  mail:
+    image: "ixdotai/smtp:v0.5.2"
+    volumes:
+      - ./rsa.private:/etc/exim4/dkim.key.temp:ro
+    environment:
+      - MAILNAME=${DOMAIN:-hotosm.org}
+      - DKIM_KEY_PATH=/etc/exim4/dkim.key.temp
+    networks:
+      - osm-net
+    restart: unless-stopped
