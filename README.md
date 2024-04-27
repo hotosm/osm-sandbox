@@ -10,7 +10,7 @@ This repository does the following:
 - Starts a sandboxed / isolated instance of OpenStreetMap from the main instance at
   openstreetmap.org.
 
-![empty-osm](./empty-osm.png)
+![empty-osm](./empty_osm.png)
 
 ## Usage (Development)
 
