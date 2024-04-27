@@ -11,7 +11,7 @@ volumes:
 
 services:
   osm:
-    image: ghcr.io/hotosm/osm-sandbox:2024-04-27
+    image: ghcr.io/hotosm/osm-sandbox:2024.04.27
     build: .
     environment:
       PROTOCOL: http${DOMAIN:+s}
