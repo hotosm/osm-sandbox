@@ -1,6 +1,7 @@
 # OSM Sandbox
 
-Edit a map collaboratively, in an isolated environment.
+An easy install sandboxed version of OpenStreetMap, for collaborative editing
+in an isolated environment.
 
 This repository does the following:
 
