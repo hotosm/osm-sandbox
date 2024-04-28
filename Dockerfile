@@ -1,3 +1,6 @@
+ARG OSM_COMMIT=a5f72216395fb490a984dd86575f855c94a6a02f
+
+
 FROM docker.io/ruby:3.3.0-slim-bookworm as openstreetmap-repo
 RUN set -ex \
      && apt-get update \
@@ -8,10 +11,10 @@ RUN set -ex \
      && rm -rf /var/lib/apt/lists/*
 WORKDIR /repo
 RUN update-ca-certificates
+ARG OSM_COMMIT
 RUN git clone --depth 1 --no-checkout \
      https://github.com/openstreetmap/openstreetmap-website.git \
-     && cd openstreetmap-website \
-     && git checkout a5f72216395fb490a984dd86575f855c94a6a02f
+     && cd openstreetmap-website && git checkout "${OSM_COMMIT}"
 
 
 
@@ -56,6 +59,12 @@ RUN bundle config set --global path /usr/local/bundle \
 
 
 FROM docker.io/ruby:3.3.0-slim-bookworm as runtime
+ARG OSM_COMMIT
+ARG GIT_COMMIT
+LABEL org.hotosm.osm-sandbox.app-name="osm" \
+      org.hotosm.osm-sandbox-version="${OSM_COMMIT}" \
+      org.hotosm.osm-sandbox-commit-ref="${COMMIT_REF:-none}" \
+      org.hotosm.osm-sandbox="sysadmin@hotosm.org"
 ENV PIDFILE=/tmp/pids/server.pid
 RUN set -ex \
      && apt-get update \

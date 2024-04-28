@@ -1,0 +1,51 @@
+upstream openstreetmap {
+    server osm:3000 max_fails=1 fail_timeout=2s;
+    keepalive 32;
+}
+
+server {
+    # Default handler for port 80
+    listen 80;
+    server_name ${DOMAIN};
+    return 301 https://$host$request_uri;
+}
+
+server {
+    # Default handler for port 443
+    listen 443 ssl reuseport;
+    server_name ${DOMAIN};
+    
+    ssl_certificate /etc/letsencrypt/live/${FMTM_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${FMTM_DOMAIN}/privkey.pem;
+    include /etc/nginx/options-ssl-nginx.conf;
+    include /etc/nginx/options-security.conf;
+
+    client_max_body_size 10M;
+
+    add_header 'Content-Security-Policy' 'upgrade-insecure-requests';
+    add_header Access-Control-Allow-Origin *;
+
+    location / {
+        # Requests headers
+        proxy_set_header Host                $http_host;
+        proxy_set_header X-Real-IP           $remote_addr;
+        proxy_set_header X-Forwarded-Proto   $scheme;
+        proxy_set_header X-Forwarded-For     $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host    $http_host;
+        proxy_set_header X-Forwarded-Server  $http_host;
+        proxy_set_header X-Forwarded-Port    $server_port;
+
+        # Disable buffer to temp files, tweak buffer for memory
+        proxy_max_temp_file_size 0;
+        proxy_buffer_size 64k;
+        proxy_buffers 8 64k;
+        proxy_busy_buffers_size 64k;
+
+        proxy_pass http://openstreetmap;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}

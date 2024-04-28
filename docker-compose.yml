@@ -8,8 +8,47 @@ volumes:
   osm-tmp:
   osm-storage:
   osm-db-data:
+  certs:
+  certbot_data:
 
 services:
+  proxy:
+    image: "ghcr.io/hotosm/osm-sandbox/proxy:debug"
+    profiles: []
+    build:
+      context: nginx
+      target: debug
+      args:
+        NGINX_TAG: "${NGINX_TAG:-1.25.3}"
+    depends_on:
+      osm:
+        condition: service_started
+    ports:
+      - ${OSM_DEV_PORT:-4433}:80
+    networks:
+      - osm-net
+    restart: "unless-stopped"
+
+  proxy-ssl:
+    image: "ghcr.io/hotosm/osm-sandbox/proxy:latest"
+    profiles: [public]
+    build:
+      context: nginx
+      target: latest
+      args:
+        NGINX_TAG: "${NGINX_TAG:-1.25.3}"
+    depends_on:
+      osm:
+        condition: service_started
+      certbot:
+        condition: service_completed_successfully
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - osm-net
+    restart: "unless-stopped"
+
   osm:
     image: ghcr.io/hotosm/osm-sandbox:2024.04.27
     build: .
@@ -28,8 +67,6 @@ services:
       # - ./settings.local.yml:/app/config/settings.local.yml:ro
     tmpfs:
       /tmp/pids/
-    ports:
-      - "${PORT:-4433}:3000"
     networks:
       - osm-net
     depends_on:
@@ -65,3 +102,19 @@ services:
     networks:
       - osm-net
     restart: unless-stopped
+
+  certbot:
+    image: "ghcr.io/hotosm/osm-sandbox/proxy:certs-init"
+    profiles: [public]
+    volumes:
+      - certs:/etc/letsencrypt
+      - certbot_data:/var/www/certbot
+    environment:
+      DOMAIN: ${DOMAIN}
+      CERT_EMAIL: ${CERT_EMAIL}
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - osm-net
+    restart: "on-failure:2"

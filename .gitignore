@@ -1,0 +1,61 @@
+# gdb_history
+TAGS
+*~
+.deps
+.libs
+py-compile
+NEWS
+*__pycache__/
+
+# output files
+*.osm
+*.txt
+*.xml
+*.geojson
+*.pbf
+*.xml
+*.pdf
+*.html
+*.mbtiles
+*.sqlitedb
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Docs
+site
+.cache
+gh_workflows.egg-info
+
+# Environment config
+.env

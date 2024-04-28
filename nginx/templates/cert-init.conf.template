@@ -1,0 +1,9 @@
+server {
+    # Default handler for port 80
+    listen 80;
+    server_name ${DOMAIN};
+    
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+}

@@ -43,10 +43,6 @@ EOF
 
 # Run script in Rails console
 ID_EDITOR_CLIENT_ID=$(bundle exec rails runner create_admin_user.rb)
-echo ""
-echo "ID Editor Client ID:"
-echo "${ID_EDITOR_CLIENT_ID}"
-echo ""
 
 # Stop web server gracefully
 kill -TERM $(cat /tmp/pids/server.pid)
