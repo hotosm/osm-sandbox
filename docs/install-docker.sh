@@ -312,8 +312,11 @@ install_docker() {
 
     # Enable docker daemon to remain after ssh disconnect
     echo
-    yellow_echo "Enable login linger for user $(whoami) (docker daemon on ssh disconnect)."
+    yellow_echo "Enabled login linger for user $(whoami) (docker daemon on ssh disconnect)."
+    echo
     loginctl enable-linger "$(whoami)"
+
+    green_echo "Success."
 }
 
 prompt_user() {

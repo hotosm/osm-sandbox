@@ -6,7 +6,14 @@ cleanup_and_exit() {
     # Cleanup temp dir if exists
     [ -d "$TEMP_DIR" ] && rm -rf "$TEMP_DIR"
 
-    if [ "$1" = "exit" ]; then
+    # Check if $1 is unset or empty, then set it to "exit"
+    if [ -z "${1+x}" ] || [ -z "$1" ]; then
+        exit_code="exit"
+    else
+        exit_code="$1"
+    fi
+
+    if [ "$exit_code" = "exit" ]; then
         echo
         echo "Exiting..."
         exit 1

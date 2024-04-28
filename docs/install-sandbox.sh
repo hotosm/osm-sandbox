@@ -21,8 +21,6 @@ DOTENV_NAME=.env
 get_repo() {
     heading_echo "Getting Necessary Files"
 
-    current_dir="${PWD}"
-
     if ! command -v git &>/dev/null; then
         yellow_echo "Downloading GIT."
         echo
@@ -38,7 +36,7 @@ get_repo() {
 
     echo "Cloning repo $repo_url to dir: ${TEMP_DIR}"
     echo
-    git clone --branch --depth 1 "$repo_url"
+    git clone --depth 1 "$repo_url"
 }
 
 check_existing_dotenv() {

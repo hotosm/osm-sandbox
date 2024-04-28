@@ -39,7 +39,12 @@ yellow_echo() {
 
 red_echo() {
     local text="$1"
-    echo -e "\e[0;33m${text}\e[0m"
+    echo -e "\e[0;31m${text}\e[0m"
+}
+
+green_echo() {
+    local text="$1"
+    echo -e "\e[0;32m${text}\e[0m"
 }
 
 install_progress() {
