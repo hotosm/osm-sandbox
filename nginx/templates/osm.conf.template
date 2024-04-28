@@ -15,8 +15,8 @@ server {
     listen 443 ssl reuseport;
     server_name ${DOMAIN};
     
-    ssl_certificate /etc/letsencrypt/live/${FMTM_DOMAIN}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${FMTM_DOMAIN}/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
     include /etc/nginx/options-ssl-nginx.conf;
     include /etc/nginx/options-security.conf;
 

@@ -62,7 +62,7 @@ check_existing_dotenv() {
 }
 
 prompt_user_gen_dotenv() {
-    heading_echo "Generate dotenv config for FMTM"
+    heading_echo "Generate dotenv config"
 
     # Exit if user does not overwrite existing dotenv
     if check_existing_dotenv; then
