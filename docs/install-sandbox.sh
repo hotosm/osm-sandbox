@@ -34,7 +34,7 @@ get_repo() {
 
     repo_url="https://github.com/hotosm/osm-sandbox.git"
 
-    echo "Cloning repo $repo_url to dir: ${TEMP_DIR}"
+    echo "Cloning repo $repo_url to dir: ${PWD}"
     echo
     git clone --depth 1 "$repo_url"
 }
@@ -110,9 +110,9 @@ prompt_user_gen_dotenv() {
     heading_echo "Generating Dotenv File"
 
     echo "DOMAIN=$DOMAIN" > .env
-    echo "ADMIN_EMAIL=$ADMIN_EMAIL" > .env
-    echo "ADMIN_PASS=$ADMIN_PASS" > .env
-    echo "CERT_EMAIL=$ADMIN_EMAIL" > .env
+    echo "ADMIN_EMAIL=$ADMIN_EMAIL" >> .env
+    echo "ADMIN_PASS=$ADMIN_PASS" >> .env
+    echo "CERT_EMAIL=$ADMIN_EMAIL" >> .env
 
     heading_echo "Completed Dotenv File Generation." "green"
     echo "File ${DOTENV_NAME} content:"
@@ -129,10 +129,10 @@ run_compose_stack() {
     fi
 
     heading_echo "Pulling Required Images"
-    docker compose pull
+    docker compose --profile public pull
 
     heading_echo "Starting HOTOSM Sandbox"
-    docker compose up \
+    docker compose --profile public up \
         --detach --remove-orphans --force-recreate
 }
 
@@ -150,15 +150,12 @@ final_output() {
 install_sandbox() {
     get_repo
     # Work in generated temp dir
-    local repo_dir="${TEMP_DIR}/osm-sandbox"
+    local repo_dir="${PWD}/osm-sandbox"
     cd "${repo_dir}" || exit 1
 
     prompt_user_gen_dotenv
     run_compose_stack
     final_output
-
-    # Cleanup files
-    rm -rf "${TEMP_DIR}"
 }
 
 install_sandbox
