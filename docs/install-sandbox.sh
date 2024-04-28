@@ -16,7 +16,6 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 
 # Global Vars
-TEMP_DIR=$(mktemp -d)
 DOTENV_NAME=.env
 
 get_repo() {

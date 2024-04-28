@@ -3,42 +3,48 @@
 set -u
 
 cleanup_and_exit() {
-    echo
-    echo "CTRL+C received, exiting..."
+    # Cleanup temp dir if exists
+    [ -d "$TEMP_DIR" ] && rm -rf "$TEMP_DIR"
 
-    # Cleanup files
-    rm -rf "${TEMP_DIR}"
-
-    exit 1
+    if [ "$1" = "exit" ]; then
+        echo
+        echo "Exiting..."
+        exit 1
+    fi
 }
 
 download_utils() {
     curl --proto '=https' --tlsv1.2 --silent --show-error --fail \
         --location https://get.sandbox.hotosm.dev/utils.sh \
-        --output utils.sh 2>&1
+        --output utils.sh || { echo "Failed to download utils.sh"; cleanup_and_exit; }
     chmod +x utils.sh
 }
 
 install_docker() {
     curl --proto '=https' --tlsv1.2 --silent --show-error --fail \
         --location https://get.sandbox.hotosm.dev/install-docker.sh \
-        --output install-docker.sh 2>&1
+        --output install-docker.sh || { echo "Failed to download install-docker.sh"; cleanup_and_exit; }
     chmod +x install-docker.sh
-    bash install-docker.sh
+    bash install-docker.sh || { echo "Failed to install Docker"; cleanup_and_exit; }
 }
 
 install_sandbox() {
     curl --proto '=https' --tlsv1.2 --silent --show-error --fail \
         --location https://get.sandbox.hotosm.dev/install-sandbox.sh \
-        --output install-sandbox.sh 2>&1
+        --output install-sandbox.sh || { echo "Failed to download install-sandbox.sh"; cleanup_and_exit; }
     chmod +x install-sandbox.sh
-    bash install-sandbox.sh
+    bash install-sandbox.sh || { echo "Failed to install HOTOSM Sandbox"; cleanup_and_exit; }
 }
 
-trap cleanup_and_exit INT
-TEMP_DIR=$(mktemp -d)
-cd "${TEMP_DIR}" || exit 1
+trap 'cleanup_and_exit "exit"' EXIT
 
+TEMP_DIR=$(mktemp -d) || { echo "Failed to create temporary directory"; cleanup_and_exit "exit"; }
+cd "$TEMP_DIR" || { echo "Failed to change directory to temporary directory"; cleanup_and_exit "exit"; }
+# Make temp dir available to child scripts
+export TEMP_DIR
+
+# Main execution
 download_utils
 install_docker
 install_sandbox
+cleanup_and_exit
