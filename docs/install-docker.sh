@@ -16,7 +16,6 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 
 # Global Vars
-TEMP_DIR=$(mktemp -d)
 OS_NAME="debian"
 
 check_user_not_root() {
@@ -62,7 +61,7 @@ check_user_not_root() {
         if [ "${ext: -3}" = ".sh" ]; then
             # User called script directly, copy to temp dir
             root_script_path="$(readlink -f "$0")"
-            temp_script_path="${TEMP_DIR}/$(basename "$0")"
+            temp_script_path="$(mktemp)"
             cp "$root_script_path" "$temp_script_path"
             chown svchot:svchot "$temp_script_path"
             chmod +x "$temp_script_path"
