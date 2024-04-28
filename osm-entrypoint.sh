@@ -53,12 +53,12 @@ kill -TERM $(cat /tmp/pids/server.pid)
 # The id_application var is for ID editor
 sed -i "s/#id_application: \"\"/id_application: \"${ID_EDITOR_CLIENT_ID}\"/" /app/config/settings.yml
 sed -i "s/server_protocol: \"http\"/server_protocol: \"${PROTOCOL}\"/" /app/config/settings.yml
-sed -i "s/server_url: \"https:\/\/www.openstreetmap.org\"/server_url: \"${DOMAIN}\"/" /app/config/settings.yml
+sed -i "s/server_url: \"openstreetmap.example.com\"/server_url: \"${DOMAIN}\"/" /app/config/settings.yml
 # SMTP settings
 sed -i "s/smtp_address: \"localhost\"/smtp_address: \"mail\"/" /app/config/settings.yml
 sed -i "s/smtp_domain: \"localhost\"/smtp_domain: \"${DOMAIN}\"/" /app/config/settings.yml
-sed -i "s/email_from: \"OpenStreetMap <openstreetmap@example.com>\"/email_from: \"OSM Dev <admin@${DOMAIN}>\"/" /app/config/settings.yml
-sed -i "s/email_return_path: \"openstreetmap@example.com\"/email_return_path: \"admin@${DOMAIN}\"/" /app/config/settings.yml
+sed -i "s/email_from: \"OpenStreetMap <openstreetmap@example.com>\"/email_from: \"HOTOSM Sandbox <no-reply@${DOMAIN}>\"/" /app/config/settings.yml
+sed -i "s/email_return_path: \"openstreetmap@example.com\"/email_return_path: \"no-reply@${DOMAIN}\"/" /app/config/settings.yml
 
 # Set exec to replace shell with the command passed as arguments
 exec "$@"
