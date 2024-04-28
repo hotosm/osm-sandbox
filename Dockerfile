@@ -1,4 +1,4 @@
-ARG OSM_COMMIT=a5f72216395fb490a984dd86575f855c94a6a02f
+ARG OSM_COMMIT=312648cb05d891d62aa670b96e7ffc812265fe90
 
 
 FROM docker.io/ruby:3.3.0-slim-bookworm as openstreetmap-repo
@@ -12,7 +12,7 @@ RUN set -ex \
 WORKDIR /repo
 RUN update-ca-certificates
 ARG OSM_COMMIT
-RUN git clone --depth 1 --no-checkout \
+RUN git clone --branch master --shallow-since=2024-04-27 \
      https://github.com/openstreetmap/openstreetmap-website.git \
      && cd openstreetmap-website && git checkout "${OSM_COMMIT}"
 

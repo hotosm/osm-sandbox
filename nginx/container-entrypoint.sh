@@ -37,9 +37,17 @@ if [ -z "${DOMAIN}" ]; then
     exit 1
 fi
 
+# Renew certs arg (default api & frontend only)
+certbot_args=(
+    "--non-interactive" "certonly" \
+    "--webroot" "--webroot-path=/var/www/certbot" \
+    "--email" "${CERT_EMAIL}" "--agree-tos" "--no-eff-email" \
+    "-d" "${DOMAIN}" \
+)
+
 # Run certbot with the constructed arguments
-echo "Running command: certbot --non-interactive certonly ${certbot_args[*]}"
-certbot --non-interactive certonly "${certbot_args[@]}"
+echo "Running command: certbot ${certbot_args}"
+certbot "${certbot_args}"
 echo "Certificate generated under: /etc/letsencrypt/live/${DOMAIN}/"
 
 # Successful exit (stop container)
