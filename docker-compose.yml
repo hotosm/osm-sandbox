@@ -40,6 +40,11 @@ services:
         condition: service_started
       certbot:
         condition: service_completed_successfully
+    volumes:
+      - certs:/etc/letsencrypt
+      - certbot_data:/var/www/certbot
+    environment:
+      DOMAIN: ${DOMAIN}
     ports:
       - 80:80
       - 443:443
