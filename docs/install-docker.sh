@@ -316,3 +316,30 @@ install_docker() {
     yellow_echo "Enable login linger for user $(whoami) (docker daemon on ssh disconnect)."
     loginctl enable-linger "$(whoami)"
 }
+
+prompt_user() {
+    heading_echo "Docker Install"
+
+    if command -v docker &> /dev/null; then
+        echo "Docker already installed: $(which docker)"
+        echo "Skipping."
+        return 0
+    fi
+
+    echo "Docker must be installed for this tool to work."
+    echo
+    echo "Do you want to install Docker? (y/n)"
+    echo
+    read -rp "Enter 'y' to install, anything else to continue: " install
+
+    if [[ "$install" = "y" ||  "$install" = "yes" ]]; then
+        install_docker
+    else
+        echo
+        red_echo "Docker is required. Aborting."
+        echo
+        exit 1
+    fi
+}
+
+prompt_user
