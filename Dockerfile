@@ -1,4 +1,4 @@
-ARG OSM_COMMIT_DATE=2024-04-28
+ARG OSM_COMMIT_DATE=2024-04-27
 ARG OSM_COMMIT=fc81201cabc8fad5b45a51c7b805e7825d22c7b5
 
 
@@ -13,6 +13,7 @@ RUN set -ex \
 WORKDIR /repo
 RUN update-ca-certificates
 ARG OSM_COMMIT
+ARG OSM_COMMIT_DATE
 RUN git clone --branch master --shallow-since="${OSM_COMMIT_DATE}" \
      https://github.com/openstreetmap/openstreetmap-website.git \
      && cd openstreetmap-website && git checkout "${OSM_COMMIT}"
