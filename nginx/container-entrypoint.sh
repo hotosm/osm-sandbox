@@ -46,8 +46,8 @@ certbot_args=(
 )
 
 # Run certbot with the constructed arguments
-echo "Running command: certbot ${certbot_args}"
-certbot "${certbot_args}"
+echo "Running command: certbot ${certbot_args[*]}"
+certbot "${certbot_args[@]}"
 echo "Certificate generated under: /etc/letsencrypt/live/${DOMAIN}/"
 
 # Successful exit (stop container)
