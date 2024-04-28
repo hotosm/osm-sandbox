@@ -58,7 +58,7 @@ services:
     environment:
       PROTOCOL: http${DOMAIN:+s}
       DOMAIN: ${DOMAIN:-127.0.0.1:4433}
-      ADMIN_EMAIL: ${ADMIN_PASS:-admin@hotosm.org}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@hotosm.org}
       ADMIN_PASS: ${ADMIN_PASS:-Password1234}
       ID_EDITOR_REDIRECT_URI: http${DOMAIN:+s}://${DOMAIN:-127.0.0.1:4433}
     volumes:
