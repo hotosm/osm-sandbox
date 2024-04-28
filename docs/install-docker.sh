@@ -4,6 +4,14 @@ set -o pipefail
 
 # Tested for Debian 11 Bookworm & Ubuntu 22.04 LTS
 
+# Import helper utils
+if [ -f "utils.sh" ]; then
+    . ./utils.sh
+else
+    echo "Error: utils.sh not found."
+    exit 1
+fi
+
 # Auto accept all apt prompts
 export DEBIAN_FRONTEND=noninteractive
 

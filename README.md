@@ -30,22 +30,11 @@ Credentials:
 ## Usage (Production)
 
 - Buy a domain and allocated a server.
-- Clone the repo on the server:
+- Run the interactive install script:
 
-    ```bash
-    git clone https://github.com/hotosm/osm-sandbox.git
-    cd https://github.com/hotosm/osm-sandbox.git
+    ```sh
+    curl --proto '=https' --tlsv1.2 -sSf https://get.sandbox.hotosm.dev | bash
     ```
-
-- Create a `.env` file:
-
-    ```dotenv
-    DOMAIN=your.domain.org
-    ADMIN_EMAIL=no-reply@your.domain.org
-    ADMIN_PASS=supersecurepassword
-    CERT_EMAIL=user@your.domain.org
-    ```
-
 
 ## Importing Existing OSM Data
 

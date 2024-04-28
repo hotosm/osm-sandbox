@@ -37,6 +37,11 @@ yellow_echo() {
     echo -e "\e[0;33m${text}\e[0m"
 }
 
+red_echo() {
+    local text="$1"
+    echo -e "\e[0;33m${text}\e[0m"
+}
+
 install_progress() {
     local pid=$1
     local delay=0.5

@@ -15,9 +15,9 @@ cleanup_and_exit() {
 download_utils() {
     curl --proto '=https' --tlsv1.2 --silent --show-error --fail \
         --location https://get.sandbox.hotosm.dev/utils.sh \
-        --output install-sandbox.sh 2>&1
+        --output utils.sh 2>&1
     chmod +x utils.sh
-    source utils.sh
+    . utils.sh
 }
 
 check_docker() {
@@ -42,7 +42,9 @@ check_docker() {
         chmod +x install-docker.sh
         bash install-docker.sh
     else
-        echo "Docker is Required. Aborting."
+        echo
+        red_echo "Docker is required. Aborting."
+        echo
         exit 1
     fi
 }
