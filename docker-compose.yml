@@ -53,7 +53,7 @@ services:
     restart: "unless-stopped"
 
   osm:
-    image: ghcr.io/hotosm/osm-sandbox:2024.4.27
+    image: ghcr.io/hotosm/osm-sandbox:2024.4.28
     build: .
     environment:
       PROTOCOL: http${DOMAIN:+s}
