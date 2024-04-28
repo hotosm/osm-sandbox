@@ -14,7 +14,7 @@ volumes:
 services:
   proxy:
     image: "ghcr.io/hotosm/osm-sandbox/proxy:debug"
-    profiles: []
+    profiles: [""]
     build:
       context: nginx
       target: debug
