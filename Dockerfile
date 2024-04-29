@@ -1,5 +1,5 @@
-ARG OSM_COMMIT_DATE=2024-04-27
-ARG OSM_COMMIT=fc81201cabc8fad5b45a51c7b805e7825d22c7b5
+ARG OSM_COMMIT_DATE=2024-04-28
+ARG OSM_COMMIT=2bb4ca45b35fe303f22afbf8139c9beda7dfbda6
 
 
 FROM docker.io/ruby:3.3.0-slim-bookworm as openstreetmap-repo
