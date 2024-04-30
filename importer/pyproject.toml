@@ -7,7 +7,6 @@ authors = [
 ]
 dependencies = [
     "osm-to-sandbox>=1.2",
-    "osm-login-python>=1.0.3",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"
