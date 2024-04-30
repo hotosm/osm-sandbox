@@ -61,6 +61,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@hotosm.org}
       ADMIN_PASS: ${ADMIN_PASS:-Password1234}
       ID_EDITOR_REDIRECT_URI: http${DOMAIN:+s}://${DOMAIN:-127.0.0.1:4433}
+      IMPORT_BBOX: ${IMPORT_BBOX}
     volumes:
       # Mount a tmp directory that will persist between runs
       - osm-tmp:/app/tmp

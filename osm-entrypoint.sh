@@ -96,11 +96,19 @@ if ! grep -q "email_return_path: \"no-reply@${DOMAIN}\"" /app/config/settings.ym
 fi
 
 echo
-echo "ID Editor OAuth App Details:"
-echo
+echo "**ID Editor OAuth App Details**"
 echo "Client ID: $ID_EDITOR_CLIENT_ID"
 echo "Client Secret: $ID_EDITOR_CLIENT_SECRET"
+echo
 echo "Admin OAuth Token: $ADMIN_OAUTH_TOKEN"
 echo
+
+if [ -n "$IMPORT_BBOX" ] && [ -n "${IMPORT_BBOX}" ]; then
+    sed -i "s/OSM_CLIENT_ID=\"GmZNCPz5j7HgTOMzmw94lrsCpnzbtuorgqsYxzxRa2w\"/OSM_CLIENT_ID=\"${OSM_CLIENT_ID}\"/" /app/importer.py
+    sed -i "s/OSM_CLIENT_SECRET=\"c2c18c031e6d647e1e02dee103f9bbca5befdf369001439fc2c7f2a820c89e56\"/OSM_CLIENT_SECRET=\"${OSM_CLIENT_SECRET}\"/" /app/importer.py
+    sed -i "s/OSM_ACCESS_TOKEN=\"_uEeRxVawGHSOtIhvb_wS1dAwCL0YALQ0zlMAmVG7-Y\"/OSM_ACCESS_TOKEN=\"${OSM_ACCESS_TOKEN}\"/" /app/importer.py
+
+    python3 /app/importer.py "$IMPORT_BBOX"
+fi
 
 exec "$@"

@@ -38,4 +38,13 @@ Credentials:
 
 ## Importing Existing OSM Data
 
-Check out [osm_to_sandbox](https://github.com/Zverik/osm_to_sandbox/tree/main)
+[osm_to_sandbox](https://github.com/Zverik/osm_to_sandbox/tree/main) is bundled
+in the container.
+
+To import a specific bounding box from production OSM (via the Overpass API),
+add the following environment variable to your `.env` file:
+
+```dotenv
+# Change the bbox string using a tool like https://boundingbox.klokantech.com
+IMPORT_BBOX: "32.189941,15.159625,32.961731,15.950766"
+```

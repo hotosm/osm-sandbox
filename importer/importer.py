@@ -1,54 +1,57 @@
+import argparse
 from typing import Sequence
 from osm_to_sandbox import osm_to_sandbox
-# from osm_to_sandbox.osm_to_sandbox import AuthPromptAction
-# from oauthcli.providers import OpenStreetMapAuth
-from osm_login_python.core import Auth
+from oauthcli.providers import OpenStreetMapAuth
+from requests_oauthlib import OAuth2Session
 
-# class OpenStreetMapSandboxAuth(OpenStreetMapAuth):
-#     def __init__(
-#         self,
-#         client_id: str,
-#         client_secret: str,
-#         scopes: Sequence[str],
-#     ):
-#         super().__init__(
-#             client_id, client_secret, scopes,
-#             'openstreetmap_sandbox',
-#             'https://sandbox.hotosm.dev'
-#         )
-#         self.session.redirect_uri = "https://sandbox.hotosm.dev"
+# Monkey patch variables and required methods with URLs and client ID
+osm_to_sandbox.SANDBOX_API = "https://sandbox.hotosm.dev/api/0.6/"
+OSM_CLIENT_ID="GmZNCPz5j7HgTOMzmw94lrsCpnzbtuorgqsYxzxRa2w"
+OSM_CLIENT_SECRET="c2c18c031e6d647e1e02dee103f9bbca5befdf369001439fc2c7f2a820c89e56"
+OSM_ACCESS_TOKEN="_uEeRxVawGHSOtIhvb_wS1dAwCL0YALQ0zlMAmVG7-Y"
 
-# # Monkey patch variables and required methods with URLs and client ID
-# osm_to_sandbox.SANDBOX_API = "https://sandbox.hotosm.dev/api/0.6/"
-# AuthPromptAction.CLIENT_ID = "GmZNCPz5j7HgTOMzmw94lrsCpnzbtuorgqsYxzxRa2w"
-# AuthPromptAction.CLIENT_SECRET = "c2c18c031e6d647e1e02dee103f9bbca5befdf369001439fc2c7f2a820c89e56"
+# Override the OAuth2Session with the token pre-generated
+class OpenStreetMapSandboxAuth(OpenStreetMapAuth):
+    def __init__(
+        self,
+        client_id: str,
+        client_secret: str,
+        scopes: Sequence[str],
+        access_token: str,
+    ):
+        super().__init__(
+            client_id, client_secret, scopes,
+            'openstreetmap_sandbox',
+            'https://sandbox.hotosm.dev'
+        )
+        self.session = OAuth2Session(
+            OSM_CLIENT_ID,
+            scope=['read_prefs', 'write_api'],
+            token={"access_token": access_token}
+        )
 
-# def custom_call(self, parser, args, values, option_string=None):
-#     auth_object = OpenStreetMapSandboxAuth(
-#         AuthPromptAction.CLIENT_ID, AuthPromptAction.CLIENT_SECRET,
-#         scopes=['read_prefs', 'write_api'],
-#     ).auth_server()
-#     test = auth_object.get('user/details')
-#     if test.status_code == 401:
-#         auth_object = OpenStreetMapSandboxAuth(
-#             AuthPromptAction.CLIENT_ID, AuthPromptAction.CLIENT_SECRET,
-#             scopes=['read_prefs', 'write_api'],
-#         ).auth_server(force=True)
-#     setattr(args, self.dest, auth_object)
-# osm_to_sandbox.AuthPromptAction.__call__ = custom_call
+def main(bbox: Sequence[float]):
+    auth_object = OpenStreetMapSandboxAuth(
+        OSM_CLIENT_ID,
+        OSM_CLIENT_SECRET,
+        scopes=['read_prefs', 'write_api'],
+        access_token=OSM_ACCESS_TOKEN,
+    )
+    print(f"Using BBOX: {bbox}")
+    osm_to_sandbox.main(bbox, auth_object)
+
 
 if __name__ == '__main__':
-    osm_auth=Auth(
-        osm_url="https://sandbox.hotosm.dev",
-        client_id="Vxiyi84s1KVvXQDLsJpeawUidZL9gvi2EY7EKjP0e8I",
-        client_secret="0e7a04772a003c82b31d9851423da59034b090a0c1ffe0e31bf3f1498074ba33",
-        secret_key="xxxx",
-        login_redirect_uri="https://sandbox.hotosm.dev",
-        scope=['read_prefs', 'write_api'],
-    )
-    access_token = "FMo_dUKxksnn4ZVTlKn1U9oX5-mrnP3o-p8XV1B7jZY"
-    user = osm_auth.deserialize_access_token(access_token)
-    print(user)
-    # # Khartoum
-    # bbox = "32.189941,15.159625,32.961731,15.950766"
-    # osm_to_sandbox.main(bbox, )
+    """
+    Parse args and run.
+
+    Usage: pdm run importer.py "32.189941,15.159625,32.961731,15.950766".
+    The example above is for central Khartoum.
+    """
+    parser = argparse.ArgumentParser(description='Insert OSM production data into HOTOSM Sandbox.')
+    parser.add_argument('bbox', type=str, help='Bounding box in the format min_lon,min_lat,max_lon,max_lat')
+    args = parser.parse_args()
+
+    bbox_str_to_float_list = [float(value) for value in args.bbox.split(",")]
+
+    main(bbox_str_to_float_list)
