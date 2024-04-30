@@ -7,7 +7,8 @@ bundle exec rails db:migrate
 # Ruby script to create admin (to file)
 # NOTE ID_EDITOR_REDIRECT_URI env var is injected
 cat << EOF > create_admin_user.rb
-unless User.exists?(email: "#{ENV['ADMIN_EMAIL']}")
+admin_user = User.find_by(email: "#{ENV['ADMIN_EMAIL']}")
+unless admin_user
   pass_crypt, pass_salt = PasswordHash.create("#{ENV['ADMIN_PASS']}")
   admin_user = User.create!(
       display_name: "HOTOSM",
@@ -25,18 +26,29 @@ unless User.exists?(email: "#{ENV['ADMIN_EMAIL']}")
   admin_user.roles.create(role: "moderator", granter_id: admin_user.id)
 end
 
-unless Oauth2Application.exists?(name: 'ID Dev')
-  admin_user = User.find_by(email: "#{ENV['ADMIN_EMAIL']}")
-  id_app = Oauth2Application.create!(
+oauth_application = Oauth2Application.find_by(name: 'ID Dev')
+unless oauth_application
+  oauth_application = Oauth2Application.create!(
       owner: admin_user,
       name: 'ID Dev',
       redirect_uri: "#{ENV['ID_EDITOR_REDIRECT_URI']}",
       scopes: ['read_prefs', 'write_api'],
       confidential: false,
   )
-  puts id_app.uid
-  puts id_app.secret
 end
+puts oauth_application.uid
+puts oauth_application.secret
+
+oauth_token = Doorkeeper::AccessToken.find_by(application_id: oauth_application.id)
+unless oauth_token
+  oauth_token = Doorkeeper::AccessToken.create!(
+    resource_owner_id: admin_user.id,
+    application_id: oauth_application.id,
+    expires_in: 315360000,  # 10yrs
+    scopes: 'read_prefs write_api'
+  )
+end
+puts oauth_token.token
 EOF
 
 # Add output from Rails script to file, then extract OAuth app creds
@@ -44,6 +56,7 @@ if [ ! -e /tmp/create_admin_user.log ]; then
   bundle exec rails runner create_admin_user.rb > /tmp/create_admin_user.log
   ID_EDITOR_CLIENT_ID=$(sed -n '1p' /tmp/create_admin_user.log)
   ID_EDITOR_CLIENT_SECRET=$(sed -n '2p' /tmp/create_admin_user.log)
+  ADMIN_OAUTH_TOKEN=$(sed -n '3p' /tmp/create_admin_user.log)
 fi
 
 # Stop web server gracefully
@@ -87,6 +100,7 @@ echo "ID Editor OAuth App Details:"
 echo
 echo "Client ID: $ID_EDITOR_CLIENT_ID"
 echo "Client Secret: $ID_EDITOR_CLIENT_SECRET"
+echo "Admin OAuth Token: $ADMIN_OAUTH_TOKEN"
 echo
 
 exec "$@"
