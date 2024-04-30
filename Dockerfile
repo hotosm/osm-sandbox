@@ -47,6 +47,7 @@ RUN set -ex \
           "libxml2-dev" \
           "libxslt1-dev" \
           "libyaml-dev" \
+          "python3-pip" \
      && rm -rf /var/lib/apt/lists/* \
      && npm install --global yarn
 WORKDIR /app
@@ -57,6 +58,11 @@ RUN bundle config set --global path /usr/local/bundle \
     && bundle install \
     # Install NodeJS packages using yarn
     && bundle exec bin/yarn install
+WORKDIR /importer
+COPY importer /importer
+RUN pip3 install --break-system-packages pdm==2.15.1
+RUN pdm export --prod > requirements.txt
+RUN pip install --break-system-packages -r requirements.txt
 
 
 
@@ -98,6 +104,9 @@ COPY --from=build /app/lib /app/lib
 COPY --from=build /app/public /app/public
 COPY --from=build /app/script /app/script
 COPY --from=build /app/vendor /app/vendor
+# Python libs and script
+COPY --from=build /usr/local/lib/python3.11/dist-packages/ /usr/local/lib/python3.11/dist-packages/
+COPY importer/importer.py /app/importer.py
 COPY osm-entrypoint.sh /
 RUN bundle config set --global path /usr/local/bundle \
      # Copy the required config to correct location
