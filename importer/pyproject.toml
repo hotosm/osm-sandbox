@@ -1,0 +1,18 @@
+[project]
+name = "osm-sandbox"
+version = "0.1.0"
+description = "Wrapper for osm_to_sandbox script."
+authors = [
+    {name = "Sam Woodcock", email = "sam.woodcock@hotosm.org"},
+]
+dependencies = [
+    "osm-to-sandbox>=1.2",
+    "osm-login-python>=1.0.3",
+]
+requires-python = "==3.11.*"
+readme = "README.md"
+license = {text = "GPL-3.0-only"}
+
+
+[tool.pdm]
+distribution = false
