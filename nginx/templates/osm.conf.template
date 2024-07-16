@@ -23,7 +23,6 @@ server {
     client_max_body_size 10M;
 
     add_header 'Content-Security-Policy' 'upgrade-insecure-requests';
-    add_header Access-Control-Allow-Origin *;
 
     location / {
         # Requests headers

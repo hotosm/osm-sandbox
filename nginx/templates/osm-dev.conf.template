@@ -10,9 +10,6 @@ server {
 
     client_max_body_size 10M;
 
-    # Response headers
-    add_header Access-Control-Allow-Origin *;
-
     location / {
         # Requests headers
         proxy_set_header Host                $http_host;
