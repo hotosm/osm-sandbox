@@ -3,6 +3,11 @@ upstream openstreetmap {
     keepalive 32;
 }
 
+upstream cgimap {
+    server osm-cgi:8000;
+    keepalive 32;
+}
+
 server {
     # Default handler for port 80
     listen 80 reuseport;
@@ -10,8 +15,51 @@ server {
 
     client_max_body_size 10M;
 
+    # Route specific paths to cgimap
+    location ~ ^/api/0\.6/map$ {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass cgimap;
+    }
+
+    location ~ ^/api/0\.6/(nodes|ways|relations)$ {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass cgimap;
+    }
+
+    location ~ ^/api/0\.6/(way|relation)/([^/]+)/full$ {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass cgimap;
+    }
+
+    location ~ ^/api/0\.6/(node|way|relation)/([^/]+)$ {
+        include /etc/nginx/fastcgi_params;
+        if ($request_method ~ ^(GET|HEAD)$) {
+            fastcgi_pass cgimap;
+        }
+
+
+        # TODO add handling for other methods needed?
+        #set $cgimap 0;
+
+        #if ($request_method = GET) {
+        #    set $cgimap 1;
+        #}
+        #if ($request_method = HEAD) {
+        #    set $cgimap 1;
+        #}
+
+        #if ($cgimap) {
+        #    include /etc/nginx/fastcgi_params;
+        #    fastcgi_pass cgimap;
+        #    break;
+        #}
+
+        #proxy_pass http://openstreetmap;
+    }
+
+    # Default location block - fallback to openstreetmap
     location / {
-        # Requests headers
+        # Request headers
         proxy_set_header Host                $http_host;
         proxy_set_header X-Real-IP           $remote_addr;
         proxy_set_header X-Forwarded-Proto   $scheme;
@@ -26,6 +74,7 @@ server {
         proxy_buffers 8 64k;
         proxy_busy_buffers_size 64k;
 
+        # Pass everything else to the main API server
         proxy_pass http://openstreetmap;
     }
 

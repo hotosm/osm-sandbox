@@ -5,6 +5,7 @@ networks:
 volumes:
   osm-tmp:
   osm-storage:
+  osm-config:
   osm-db-data:
   certs:
   certbot_data:
@@ -20,6 +21,8 @@ services:
         NGINX_TAG: "${NGINX_TAG:-1.25.3}"
     depends_on:
       osm:
+        condition: service_started
+      osm-cgi:
         condition: service_started
     ports:
       - ${OSM_DEV_PORT:-4433}:80
@@ -38,6 +41,8 @@ services:
     depends_on:
       osm:
         condition: service_started
+      osm-cgi:
+        condition: service_started
       certbot:
         condition: service_completed_successfully
     volumes:
@@ -53,30 +58,95 @@ services:
     restart: "unless-stopped"
 
   osm:
-    image: ghcr.io/hotosm/osm-sandbox:2024.4.30
+    image: "ghcr.io/hotosm/osm-sandbox:2024.4.30"
     build: .
+    depends_on:
+      osm-db:
+        condition: service_healthy
     environment:
       PROTOCOL: http${DOMAIN:+s}
+      # NOTE for development this must be 127.0.0.1 due to
+      # OSM oauth config restrictions
       DOMAIN: ${DOMAIN:-127.0.0.1:4433}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@hotosm.org}
       ADMIN_PASS: ${ADMIN_PASS:-Password1234}
       ID_EDITOR_REDIRECT_URI: http${DOMAIN:+s}://${DOMAIN:-127.0.0.1:4433}
-      IMPORT_BBOX: ${IMPORT_BBOX}
     volumes:
       # Mount a tmp directory that will persist between runs
       - osm-tmp:/app/tmp
       # Mount a storage directory that will persist between runs
       - osm-storage:/app/storage
+      # Mount config between containers
+      - osm-config:/app/config
       # Mount local setting overrides
       # - ./settings.local.yml:/app/config/settings.local.yml:ro
     tmpfs:
       /tmp/pids/
     networks:
       - osm-net
+    restart: unless-stopped
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/3000' || exit 1
+      interval: 5s
+      retries: 3
+      start_period: 5s
+      timeout: 5s
+
+  osm-jobs:
+    image: "ghcr.io/hotosm/osm-sandbox:2024.4.30"
+    depends_on:
+      osm:
+        condition: service_healthy
+    volumes:
+      # Mount a tmp directory that will persist between runs
+      - osm-tmp:/app/tmp
+      # Mount a storage directory that will persist between runs
+      - osm-storage:/app/storage
+      # Mount config between containers
+      - osm-config:/app/config
+      # Mount local setting overrides
+      # - ./settings.local.yml:/app/config/settings.local.yml:ro
+    tmpfs:
+      /tmp/pids/
+    networks:
+      - osm-net
+    restart: unless-stopped
+    entrypoint: /bin/sh -c
+    command:
+      - |
+        echo "Running background worker"
+        bundle exec rake jobs:work
+
+  osm-cgi:
+    image: "ghcr.io/hotosm/osm-sandbox/cgimap:${CGIMAP_VERSION:-v2.0.0.pre}"
+    build:
+      context: https://github.com/zerebubuth/openstreetmap-cgimap.git#${CGIMAP_VERSION:-v2.0.0}
+      dockerfile: docker/debian/Dockerfile_bookworm
     depends_on:
       osm-db:
         condition: service_healthy
+    environment:
+      CGIMAP_HOST: osm-db
+      CGIMAP_DBNAME: openstreetmap
+      CGIMAP_USERNAME: openstreetmap
+      CGIMAP_PASSWORD: openstreetmap
+      CGIMAP_MEMCACHE: memcached
+      CGIMAP_RATELIMIT: 204800
+      CGIMAP_MAXDEBT: 250
+      CGIMAP_MODERATOR_RATELIMIT: 1048576
+      CGIMAP_MODERATOR_MAXDEBT: 1024
+      CGIMAP_PORT: 8000
+      CGIMAP_INSTANCES: 3
+    networks:
+      - osm-net
     restart: unless-stopped
+    # Override from https://github.com/zerebubuth/openstreetmap-cgimap/blob/master/docker/debian/Dockerfile_bookworm
+    # defaults: --max-payload 50000000L --map-nodes 50000 --map-area 0.25 && \
+    entrypoint: >
+      sh -c "/usr/bin/openstreetmap-cgimap --pidfile /tmp/cgimap.pid \
+      --logfile=/proc/1/fd/1 --daemon \
+      --max-payload 50000000 --map-nodes 10000000 --map-area 0.25 && \
+      tail --pid=\$(cat /tmp/cgimap.pid) -f /dev/null"
 
   osm-db:
     image: docker.io/postgres:14
@@ -103,6 +173,14 @@ services:
     environment:
       - MAILNAME=${DOMAIN:-hotosm.org}
       - DKIM_KEY_PATH=/etc/exim4/dkim.key.temp
+    networks:
+      - osm-net
+    restart: unless-stopped
+
+  memcached:
+    image: "docker.io/memcached:1.6"
+    # ports:
+    #   - 11211:11211
     networks:
       - osm-net
     restart: unless-stopped
