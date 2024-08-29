@@ -1,5 +1,5 @@
-ARG OSM_COMMIT_DATE=2024-04-29
-ARG OSM_COMMIT=183e5c6d67820db1a8740bfda6b3af0b0c0de554
+ARG OSM_COMMIT_SHA=99a7d21a9bc50cdb38559dd0a8b60bc60072b5a1
+
 
 
 FROM docker.io/ruby:3.3.0-slim-bookworm as openstreetmap-repo
@@ -7,20 +7,22 @@ RUN set -ex \
      && apt-get update \
      && DEBIAN_FRONTEND=noninteractive apt-get install \
      -y --no-install-recommends \
-          "git" \
-          "ca-certificates" \
+          "curl" \
+          "unzip" \
      && rm -rf /var/lib/apt/lists/*
-WORKDIR /repo
-RUN update-ca-certificates
-ARG OSM_COMMIT
-ARG OSM_COMMIT_DATE
-RUN git clone --branch master --shallow-since="${OSM_COMMIT_DATE}" \
-     https://github.com/openstreetmap/openstreetmap-website.git \
-     && cd openstreetmap-website && git checkout "${OSM_COMMIT}"
+WORKDIR /openstreetmap-website
+ARG OSM_COMMIT_SHA
+RUN curl -L \
+     "https://github.com/openstreetmap/openstreetmap-website/archive/${OSM_COMMIT_SHA}.zip" \
+     --output website.zip \
+     && unzip website.zip \
+     && mv openstreetmap-website-$OSM_COMMIT_SHA/* /openstreetmap-website/ \
+     && rm website.zip
 
 
 
 FROM docker.io/ruby:3.3.0-slim-bookworm as build
+ENV RAILS_ENV=production 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -ex \
      && apt-get update \
@@ -47,32 +49,42 @@ RUN set -ex \
           "libxml2-dev" \
           "libxslt1-dev" \
           "libyaml-dev" \
-          "python3-pip" \
      && rm -rf /var/lib/apt/lists/* \
      && npm install --global yarn
 WORKDIR /app
 COPY --from=openstreetmap-repo \
-    /repo/openstreetmap-website/ /app/
+    /openstreetmap-website/ /app/
 # Install Ruby packages
 RUN bundle config set --global path /usr/local/bundle \
     && bundle install \
     # Install NodeJS packages using yarn
     && bundle exec bin/yarn install
-WORKDIR /importer
-COPY importer /importer
-RUN pip3 install --break-system-packages pdm==2.15.1
-RUN pdm install
+# A dummy config is required for precompile step below
+RUN cp config/example.database.yml config/database.yml \
+    && touch config/settings.local.yml \
+    && echo "#session key \n\
+    production: \n\
+      secret_key_base: $(bundle exec bin/rails secret)" > config/secrets.yml \
+    # Precompile assets for faster initial load
+    && bundle exec bin/rails i18n:js:export assets:precompile
+# Package svgo dependency required by image_optim into node single file exe
+RUN \
+     mkdir /bins && cd /bins \
+     # TODO update this to use node@21 single file executable?
+     && npm install -g svgo @yao-pkg/pkg \
+     && pkg -t node18-linux /usr/local/bin/svgo
 
 
 
 FROM docker.io/ruby:3.3.0-slim-bookworm as runtime
-ARG OSM_COMMIT
+ARG OSM_COMMIT_SHA
 ARG GIT_COMMIT
 LABEL org.hotosm.osm-sandbox.app-name="osm" \
-      org.hotosm.osm-sandbox-version="${OSM_COMMIT}" \
+      org.hotosm.osm-sandbox-version="${OSM_COMMIT_SHA}" \
       org.hotosm.osm-sandbox-commit-ref="${COMMIT_REF:-none}" \
       org.hotosm.osm-sandbox="sysadmin@hotosm.org"
-ENV PIDFILE=/tmp/pids/server.pid
+ENV RAILS_ENV=production \
+    PIDFILE=/tmp/pids/server.pid
 RUN set -ex \
      && apt-get update \
      && DEBIAN_FRONTEND=noninteractive apt-get install \
@@ -90,29 +102,29 @@ RUN set -ex \
           "libxml2-dev" \
           "libxslt1-dev" \
           "libyaml-dev" \
+          # Required image optimisation libraries in OSM prod
+          "advancecomp" \
+          "gifsicle" \
+          "libjpeg-progs" \
+          "jhead" \
+          "jpegoptim" \
+          "optipng" \
+          "pngcrush" \
+          "pngquant" \
      && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=build /app/Gemfile* /app/Rakefile /app/config.ru /app/
-COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY --from=build /app/app /app/app
-COPY --from=build /app/bin /app/bin
-COPY --from=build /app/config /app/config
-COPY --from=build /app/db /app/db
-COPY --from=build /app/lib /app/lib
-COPY --from=build /app/public /app/public
-COPY --from=build /app/script /app/script
-COPY --from=build /app/vendor /app/vendor
-# Python libs and script
-COPY --from=build /importer/.venv/lib/python3.11/site-packages /usr/local/lib/python3.11/dist-packages
-COPY importer/importer.py /app/importer.py
+COPY --from=build /app /app
 COPY osm-entrypoint.sh /
-RUN bundle config set --global path /usr/local/bundle \
+# Copy svgo requirement as single file executable
+COPY --from=build /bins/svgo /usr/local/bin/svgo
+RUN \
+     bundle config set --global path /usr/local/bundle \
      # Copy the required config to correct location
      # https://github.com/openstreetmap/openstreetmap-website/blob/master/DOCKER.md#initial-setup
      && cp config/example.storage.yml config/storage.yml \
      && cp config/docker.database.yml config/database.yml \
-     # Replace db --> osm-db compose service
+     # Replace db --> osm-db compose network service name
      && sed -i 's/host: db/host: osm-db/' config/database.yml \
      && touch config/settings.local.yml \
      && chmod +x /osm-entrypoint.sh

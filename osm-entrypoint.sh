@@ -1,9 +1,29 @@
 #!/bin/bash
 
-# First start web server & run migrations
+# Add db creds to production setup
+echo " # Production DB
+production:
+  adapter: postgresql
+  host: ${POSTGRES_HOST:-osm-db}
+  database: ${POSTGRES_DB:-openstreetmap}
+  username: ${POSTGRES_USER:-openstreetmap}
+  password: ${POSTGRES_PASSWORD:-openstreetmap}
+  encoding: utf8" >config/database.yml
+
+# Start web server & run migrations
+echo ""
+echo "------------------"
+echo "Running migrations"
+echo "------------------"
+echo ""
 bundle exec rails s -d -p 3000 -b '0.0.0.0'
 bundle exec rails db:migrate
 
+echo ""
+echo "-------------------"
+echo "Creating OAuth apps"
+echo "-------------------"
+echo ""
 # Ruby script to create admin (to file)
 # NOTE ID_EDITOR_REDIRECT_URI env var is injected
 cat << EOF > create_admin_user.rb
@@ -110,5 +130,11 @@ if [ -n "$IMPORT_BBOX" ] && [ -n "${IMPORT_BBOX}" ]; then
 
     python3 /app/importer.py "$IMPORT_BBOX"
 fi
+
+echo ""
+echo "-------------------"
+echo "Running OSM production server: $@"
+echo "-------------------"
+echo ""
 
 exec "$@"
