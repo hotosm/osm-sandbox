@@ -1,3 +1,5 @@
-# OSM Sandbox Importer
+# OSM Importer Service
 
-For importing data into the OSM Sandbox environment.
+Import data into a fresh OSM Sanbox instance.
+
+Uses Geofabrik country data, then filters down to the users required BBOX.
