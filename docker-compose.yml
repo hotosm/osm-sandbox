@@ -141,11 +141,15 @@ services:
       - osm-net
     restart: unless-stopped
     # Override from https://github.com/zerebubuth/openstreetmap-cgimap/blob/master/docker/debian/Dockerfile_bookworm
-    # defaults: --max-payload 50000000L (50MB) --map-nodes 50000 --map-area 0.25 (square degrees) && \
+    # defaults: --max-payload 50000000L (50MB) --max-changeset-elements 10000
+    # --map-nodes 50000 --map-area 0.25 (square degrees)
+    # Note the Ruby server max-changeset-elements is hardcoded (but this config should override it):
+    # https://github.com/openstreetmap/openstreetmap-website/blob/cee9818dfc9ac3f6eae01cdb51df9093ae5d1322/app/models/changeset.rb#L58
     entrypoint: >
       sh -c "/usr/bin/openstreetmap-cgimap --pidfile /tmp/cgimap.pid \
       --logfile=/proc/1/fd/1 --daemon \
-      --max-payload 200000000 --map-nodes 10000000 --map-area 10 && \
+      --max-payload 500000000 --max-changeset-elements 1000000 \
+      --map-nodes 10000000 --map-area 10 && \
       tail --pid=\$(cat /tmp/cgimap.pid) -f /dev/null"
 
   osm-db:
