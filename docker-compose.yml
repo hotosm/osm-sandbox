@@ -118,9 +118,9 @@ services:
         bundle exec rake jobs:work
 
   osm-cgi:
-    image: "ghcr.io/hotosm/osm-sandbox/cgimap:${CGIMAP_VERSION:-v2.0.0.pre}"
+    image: "ghcr.io/hotosm/osm-sandbox/cgimap:${CGIMAP_VERSION:-v2.0.1}"
     build:
-      context: https://github.com/zerebubuth/openstreetmap-cgimap.git#${CGIMAP_VERSION:-v2.0.0}
+      context: https://github.com/zerebubuth/openstreetmap-cgimap.git#${CGIMAP_VERSION:-v2.0.1}
       dockerfile: docker/debian/Dockerfile_bookworm
     depends_on:
       osm-db:
@@ -141,11 +141,11 @@ services:
       - osm-net
     restart: unless-stopped
     # Override from https://github.com/zerebubuth/openstreetmap-cgimap/blob/master/docker/debian/Dockerfile_bookworm
-    # defaults: --max-payload 50000000L --map-nodes 50000 --map-area 0.25 && \
+    # defaults: --max-payload 50000000L (50MB) --map-nodes 50000 --map-area 0.25 (square degrees) && \
     entrypoint: >
       sh -c "/usr/bin/openstreetmap-cgimap --pidfile /tmp/cgimap.pid \
       --logfile=/proc/1/fd/1 --daemon \
-      --max-payload 50000000 --map-nodes 10000000 --map-area 0.25 && \
+      --max-payload 200000000 --map-nodes 10000000 --map-area 10 && \
       tail --pid=\$(cat /tmp/cgimap.pid) -f /dev/null"
 
   osm-db:
@@ -158,6 +158,8 @@ services:
       - osm-db-data:/var/lib/postgresql/data
     networks:
       - osm-net
+    ports:
+      - 54321:5432
     restart: unless-stopped
     healthcheck:
       test: pg_isready -U openstreetmap -d openstreetmap
