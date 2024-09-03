@@ -114,6 +114,10 @@ services:
     entrypoint: /bin/sh -c
     command:
       - |
+        # First delay 30 seconds to ensure settings configured
+        echo "Waiting 30 seconds..."
+        timeout 30s
+
         echo "Running background worker"
         bundle exec rake jobs:work
 
