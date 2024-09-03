@@ -152,17 +152,17 @@ services:
       --map-nodes 10000000 --map-area 10 && \
       tail --pid=\$(cat /tmp/cgimap.pid) -f /dev/null"
 
-  importer:
-    image: "ghcr.io/hotosm/osm-sandbox/importer:latest"
-    build:
-      context: importer
-    depends_on:
-      osm:
-        condition: service_healthy
-    networks:
-      - osm-net
-    restart: unless-stopped
-    entrypoint: sleep infinity
+  # importer:
+  #   image: "ghcr.io/hotosm/osm-sandbox/importer:latest"
+  #   build:
+  #     context: importer
+  #   depends_on:
+  #     osm:
+  #       condition: service_healthy
+  #   networks:
+  #     - osm-net
+  #   restart: unless-stopped
+  #   entrypoint: sleep infinity
 
   osm-db:
     image: docker.io/postgres:14
