@@ -1,5 +1,20 @@
 # OSM Sandbox
 
+> [!IMPORTANT]  
+> This project was a demo / prototype to easily set up a sandboxed
+> OSM instance on demand, with minimal config required.
+>
+> The goal was to contribute any changes made here to the
+> [osm-seed](https://github.com/developmentseed/osm-seed/) repository.
+>
+> There has since been additional work done on OSMUS's Sandbox
+> [implementation](https://github.com/osmus/osm-sandbox-dashboard), which
+> will likely be used in conjunction with osm-seed or
+> [Public Domain Map](https://github.com/publicdomainmap/api).
+>
+> This repo is now archived & work / contribution will continue on the
+> linked repos.
+
 An easy install sandboxed version of OpenStreetMap, for collaborative editing
 in an isolated environment.
 
