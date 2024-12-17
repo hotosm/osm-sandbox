@@ -115,6 +115,7 @@ RUN set -ex \
 WORKDIR /app
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /app /app
+COPY scripts /app/scripts
 COPY osm-entrypoint.sh /
 # Copy svgo requirement as single file executable
 COPY --from=build /bins/svgo /usr/local/bin/svgo
