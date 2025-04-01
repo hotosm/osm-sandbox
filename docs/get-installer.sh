@@ -22,14 +22,14 @@ cleanup_and_exit() {
 
 download_utils() {
     curl --proto '=https' --tlsv1.2 --silent --show-error --fail \
-        --location https://get.sandbox.hotosm.dev/utils.sh \
+        --location https://get.sandbox.hotosm.org/utils.sh \
         --output utils.sh || { echo "Failed to download utils.sh"; cleanup_and_exit; }
     chmod +x utils.sh
 }
 
 install_docker() {
     curl --proto '=https' --tlsv1.2 --silent --show-error --fail \
-        --location https://get.sandbox.hotosm.dev/install-docker.sh \
+        --location https://get.sandbox.hotosm.org/install-docker.sh \
         --output install-docker.sh || { echo "Failed to download install-docker.sh"; cleanup_and_exit; }
     chmod +x install-docker.sh
     bash install-docker.sh || { echo "Failed to install Docker"; cleanup_and_exit; }
@@ -37,7 +37,7 @@ install_docker() {
 
 install_sandbox() {
     curl --proto '=https' --tlsv1.2 --silent --show-error --fail \
-        --location https://get.sandbox.hotosm.dev/install-sandbox.sh \
+        --location https://get.sandbox.hotosm.org/install-sandbox.sh \
         --output install-sandbox.sh || { echo "Failed to download install-sandbox.sh"; cleanup_and_exit; }
     chmod +x install-sandbox.sh
     bash install-sandbox.sh || { echo "Failed to install HOTOSM Sandbox"; cleanup_and_exit; }

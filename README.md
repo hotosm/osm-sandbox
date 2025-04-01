@@ -48,7 +48,7 @@ Credentials:
 - Run the interactive install script:
 
     ```sh
-    curl --proto '=https' --tlsv1.2 -sSf https://get.sandbox.hotosm.dev | bash
+    curl --proto '=https' --tlsv1.2 -sSf https://get.sandbox.hotosm.org | bash
     ```
 
 ## Importing Existing OSM Data

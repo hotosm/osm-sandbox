@@ -75,7 +75,7 @@ check_user_not_root() {
             machinectl --quiet shell \
                 --setenv=RUN_AS_ROOT=true \
                 --setenv=DOCKER_HOST="${DOCKER_HOST}" \
-                svchot@ /bin/bash -c "curl -fsSL https://get.sandbox.hotosm.dev | bash"
+                svchot@ /bin/bash -c "curl -fsSL https://get.sandbox.hotosm.org | bash"
         fi
 
         exit 0
